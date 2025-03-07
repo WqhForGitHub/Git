@@ -14,3 +14,11 @@ git push origin --delete master
 ```bash
 git push origin -u legacy
 ```
+
+
+
+
+git branch -m main webpack-demo
+git fetch origin
+git branch -u origin/webpack-demo webpack-demo
+git remote set-head origin -a
