@@ -16,7 +16,7 @@ git init
 
 
 
-# git clone 相关命令
+# git clone
 
 
 
@@ -42,7 +42,7 @@ git clone --branch develop https://github.com/your-username/your-repository.git
 
 
 
-# git status 相关命令
+# git status
 
 
 
@@ -58,7 +58,7 @@ git status -s
 
 
 
-# git diff 相关命令
+# git diff
 
 
 
@@ -74,7 +74,7 @@ git diff README.md
 
 
 
-# git commit 相关命令
+# git commit
 
 
 
@@ -114,7 +114,7 @@ git commit --amend --no-edit
 
 
 
-# git rm 相关命令
+# git rm
 
 
 
@@ -144,7 +144,7 @@ git commit -m "强制删除 modified_file.txt"
 
 
 
-# git branch 相关命令
+# git branch
 
 
 
