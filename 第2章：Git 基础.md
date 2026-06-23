@@ -148,37 +148,59 @@ M  lib/simplegit.rb
 ?? LICENSE.txt
 ```
 未被跟踪的新文件旁边会有一个 ?? 标记，已暂存的新文件会有 A 标记，而已修改的文件则会有一个 M 标记，等等。实际上，文件列表旁边的标记是分成两列的，左列标明了文件是否已暂存，而右列表明了文件是否已修改。以上面的命令行输出为例，工作目录下的 README 文件已被修改，但还没有被暂存。另一个 lib/simplegit.rb 问价是已修改而且已暂存的状态。而 Rakefile 文件则是已修改并被添加到暂存区，之后又被修改过，因此暂存区和工作区都包含了该文件的变更。
+## 2.2.5 忽略文件
 
-**5. 忽略文件**
-
+很多时候，你并不希望某一类文件被 Git 自动添加，甚至不想这些文件被显示在未跟踪的文件列表下面。这些文件一般是自动生成的文件（比如日志文件）或是由构建系统创建的文件。在这种情况下，可以创建名为 .gitignore 的文件，在其中列出待匹配文件的模式。下面是一个 .gitignore 文件的例子：
+```shell
+cat .gitignore
+*.[oa]
+*~
+```
+其中第一行告诉 Git 忽略所有以 .o 或 .a 结尾的文件，这些都是构建代码的过程中所生成的对象和归档文件。第二行则是告诉 Git 忽略所有以波浪号（~）结尾的文件，Emacs 等许多文本编辑器都会将其标记为临时文件。你也可以让 Git 忽略 log 目录、tmp 目录、pid 目录以及自动生成的文档等。最好在开始工作前配置好 .gitignore 文件，这样你就不会意外地把不想纳入 Git 仓库的文件提交进来了。
+可以写入 .gitignore 文件中的匹配模式的规则如下：
+- 空行或者以 # 开始的行会被忽略
+- 支持标准的 glob 模式
+- 以斜杠（/）开头的模式可用于禁止递归匹配
+- 以斜杠（/）结尾的模式表示目录
+- 以感叹号（!）开始的模式表示取反
+glob 模式类似于 shell 所使用的简化版正则表达式。具体来讲，星号（`*`）匹配零个或更多字符，[abc]匹配方括号内的任意单个字符（在这个例子里是 a、b 或 c），而问号（?）则匹配任意单个字符。在方括号中使用使用短划线分隔两个字符（例如[0-9]）的模式能够匹配在这两个字符范围内的任何单个字符（在这个例子里是0到9之间的任何数字）。你还可以用两个星号匹配嵌套目录，比如 `a/**/z` 能够匹配 `a/z`、`a/b/z`和`a/b/c/z`等。
 下面是另一个 .gitignore 文件的例子：
+```shell
+*.a # 忽略 .a 类型的文件
+!lib.a # 仍然跟踪 lib.a，即使上一行指令要忽略 .a 类型的文件
+/TODO # 只忽略当前目录的 TODO 文件，而不忽略子目录下的 TODO
+build/ # 忽略 build/ 目录下的所有文件
+doc/*.txt # 忽略 doc/notes.txt，而不忽略 doc/server/arch.txt
+doc/**/*.pdf # 忽略 doc/目录下的所有 .pdf 文件
+```
+>注意
+>GitHub 维护了一份相当全面的 .gitignore 参考示例列表，其中的例子都非常不错，涵盖了数十个不同项目和语言，可以作为自己项目的参考。
+## 2.2.6 查看已暂存和未暂存的变更
 
-`*.a `                      # 忽略.a类型的文件
+如果 git status 命令的输出信息对你来说太过泛泛，你想知道修改的具体内容，而不仅仅是你更改了哪些文件，这时可以使用 git diff 命令。我们将稍后讲解 git diff 的细节，现在只需知道它基本上可以用来解决两个问题：哪些变更还没有被暂存？哪些已暂存的变更正待提交？尽管 git status 也可以通过列举文件名的方式大致回答上述问题，但 git diff 则会显示出你具体添加和删除了哪些行。换句话说，git diff 的输出是补丁（patch）。
+假设你又编辑并暂存了 README 文件，之后更改了 CONTRIBUTING.md 但没有暂存它。如果你现在执行 git status 命令，那么又会看到类似下面的输出：
+```shell
+git status
+On branch master
+Changes to be committed:
+	(use "git reset HEAD <file>..." to unstage)
+	
+	new file: README
+	
+Changes not staged for commit:
+	(use "git add <file>..." to update what will be committed)
+	(use "git checkout -- <file>..." to discard changes in working directory)
+	
+	modified: CONTRIBUTING.md
+```
+要查看尚未添加到暂存区的变更，直接输入不加参数的 git diff 命令：
+```shell
+git diff
+```
+## 2.2.7 提交变更
 
-`!lib.a`                 # 仍然跟踪lib.a，即使上一行指令要忽略 .a 类型的文件
-
-`/TODO `                 # 只忽略当前目录的TODO文件，而不忽略子目录下的TODO
-
-`build/`                 # 忽略 build/ 目录下的所有文件
-
-`doc/*.txt`           # 忽略doc/notes.txt，而不忽略 doc/server/arch.txt                                                                                                                                                                                                                                                                                                                                                 
-
-`doc/**/*.pdf`     # 忽略 doc/目录下的所有 .pdf 文件 
-
-
-
-
-
-# 2.6 标记
-
-#### 1. 列举标签
-
-在 Git 中，列举可用标签的操作很简单，只需键入 git tag 即可：
-
-```                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     powershell
-$ git tag
-v0.1
-v1.3
+现在你的暂存区已经准备妥当，可以提交了。请记得所有未暂存的变更都不会进入到提交的内容中，这包括任何在编辑之后没有执行 git add 命令添加到暂存区的新建的或修改过的文件。这些文件在提交后状态并不会发生变化，仍然是已修改的状态。举个例子，假设你上次执行 git status 命令时看到所有变更都已暂存并等待提交。这时最简单的提交方式就是执行 git commit 命令：
+```shell
+git commit
 ```
 
-​                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
