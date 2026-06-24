@@ -299,6 +299,41 @@ git rm README.md
 git add README
 ```
 不管你是用 Git 的 mv 命令，还是直接给文件改名，Git 都能推断出这是重命名操作。唯一的区别是 git mv 只需键入一条命令而不是三条命令，所以会比较方便。更重要的是，你可以用任何你习惯的工具或方法来重命名文件，然后在提交之前再执行 Git 的 add 和 rm 命令。
+# 2.3 查看提交历史
+
+在完成了几次提交，或者克隆了一个已有提交历史的仓库之后，你可能想要看看历史记录。可以使用 git log 命令来实现，这是最基础却又最强大的一条命令。
+下面这些例子要用到一个非常简单的示例项目 simplegit。要获取这个项目，请执行：
+```shell
+git clone https://github.com/schacon/simplegit-progit
+```
+当你在此项目中执行 git log 时，会得到以下输出：
+```shell
+git log
+commit f9e1d7d00c67f95be5da7344afcbaf837fa51cb4 (HEAD -> 精通Git（第2版）, origin/精通Git（第2版）)
+Author: wangqihao <w-qh@foxmail.com>
+Date:   Wed Jun 24 16:00:04 2026 +0800
+
+    第2章：Git 基础
+
+commit 5867505cfdd639521c1df0c53eaf4c73661b6860
+Author: wangqihao <w-qh@foxmail.com>
+Date:   Wed Jun 24 12:07:11 2026 +0800
+
+    第2章：Git 基础
+
+commit 87e3bae0431437e92d827144bd229889ff59d372
+Author: wangqihao <w-qh@foxmail.com>
+Date:   Tue Jun 23 20:42:02 2026 +0800
+
+    第2章：Git 基础
+```
+默认不加参数的情况下，git log 会按照时间顺序列出仓库中的所有提交，其中最新的提交显示在最前面。如你所见，和每个提交一同列出的还有它的 SHA-1 校验和、作者的姓名和邮箱、提交日期以及提交信息。
+git log 有很多不同的选项，可以直观地展示出所需的内容。现在我们来看一些最常用的选项。
+最有用的一个选项是 -p，它会显示出每次提交所引入的差异。你还可以加上 -2 参数，只输出最近的两次提交
+
+
+
+
 
 
 
