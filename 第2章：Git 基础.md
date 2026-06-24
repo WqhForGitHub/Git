@@ -204,7 +204,118 @@ git diff
 git commit
 ```
 执行这条命令后就会打开你所选择的文本编辑器。（默认会采用 shell 的环境变量 $EDITOR 所指定的文本编辑器，通常是 Vim 或者 Emacs。你也可以用第 1 章中所见到的 git config --global core.editor 命令配置 Git 使用任何你想要的编辑器。）
-可以看出，默认的提交信息会包含被注释掉的 git status 命令你的最新输出结果，在最上边还有一行是空行。你既可以删掉这些注释并输入自己的提交信息，也可以保留这些注释，以帮助你记住提交的具体内容。（若需要记下更详细的更改记录，可以给 git commit 加上 -v 参数。这样会把这次提交的差异比对显示在文本编辑器中，让你可以看到要提交的具体变更。）当你退出编辑器时，Git 会移除注释内容和差异比对，把剩下的提交信息记录到所创建的提交中。
+可以看出，默认的提交信息包含被注释掉的 git status 命令你的最新输出结果，在最上边还有一行是空行。你既可以删掉这些注释并输入自己的提交信息，也可以保留这些注释，以帮助你记住提交的具体内容。（若需要记下更详细的更改记录，可以给 git commit 加上 -v 参数。这样会把这次提交的差异比对显示在文本编辑器中，让你可以看到要提交的具体变更。）当你退出编辑器时，Git 会移除注释内容和差异比对，把剩下的提交信息记录到所创建的提交中。
+完成上述提交还有另一种方式，那就是直接在命令行上键入提交信息。这会需要给 git commit 命令加上 -m 选项：
+```shell
+git commit -m "Story 182: Fix benchmarks for speed"
+[master 463dc4f] Story 182: Fix benchmarks for speed
+2 files changed, 2 insertions(+)
+create mode 10064 README
+```
+你终于完成了自己的首次提交。可以看到命令输出中包含了和该提交本身相关的一些信息：提交到哪个分支（master）、提交的 SHA-1 校验和是多少（463dc4f）、改动了多少个文件以及源文件新增和删除了多少行的统计信息。
+请记住，提交时记录的是是暂存区中的快照。任何未暂存的内容仍然保持着已修改状态。你可以再次提交这些内容，将其纳入到版本历史记录中。每次提交时，都记录了项目的快照，日后可以用于比对或恢复。
+## 2.2.8 跳过暂存区
+
+在按照你的要求精确地生成提交内容时，暂存区非常有用，但就工作流而言，它有时显得有点过于繁琐了。如果你想要跳过暂存区直接提交，Git 为你提供了更快捷的途径。给 git commit 命令传入 -a 选项，就能让 Git 自动把已跟踪的所有文件添加到暂存区，然后在提交，这样你就不用再执行 git add 了：
+```shell
+git status
+On branch master
+Changes not staged for commit:
+ (use "git add <file>..." to update what will be commited)
+ (use "git checkout -- <file>..." to discard changes in working directory)
+ 
+ modified: CONTRIBUTING.md
+ 
+no changes added to commit (use "git add" and/or "git commit =a")
+
+git commit -a -m 'added new benchmarks'
+[master 83e38c7] added new benchmarks
+1 file changed, 5 insertions(+), 0 deletions(-)
+```
+注意在上面的例子中，提交前不再需要执行 git add 来添加 CONTRIBUTING.md 文件了。
+## 2.2.9 移除文件
+
+要从 Git 中移除某个文件，你需要把它先从已跟踪文件列表中移除（确切地说，是从暂存区中移除），然后再提交。git rm 会帮你完成这些操作，另外该命令还会把文件从工作目录中移除，这样下一次你就不会在未跟踪文件列表中看到这些文件了。
+如果你只是简单地把文件从你的工作目录移除，而没有使用 git rm，那么在执行 git status 时会看到文件出现在 "Changes not staged for commit" 区域（也就是未暂存区域）：
+```shell
+rm PROJECTS.md
+git status
+On branch master
+Your branch is up-to-date with 'origin/master'.
+Changes not staged for commit:
+	(use "git add/rm <file>..." to update what will be commited)
+	(use "git checkout -- <file>..." to discard changes in working directory)
+	
+	deleted: PROJECTS.md
+	
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+如果你这时执行 git rm，Git 才会把文件的移除状态记录到暂存区：
+```shell
+git rm PROJECTS.md
+rm 'PROJECTS.md'
+
+git status
+On branch master
+Changes to be commited:
+	(use "git reset HEAD <file>..." to unstage)
+	
+	deleted: PROJECTS.md
+```
+下一次提交的时候，这个文件就不存在了，也不会再给 Git 跟踪管理。如果你更改了某个文件，并已经把它加入到了索引当中（已暂存），要想让 Git 移除它就必须使用 -f 选项强制移除。这是为了防止没有被记录到快照中的数据被意外移除而设立的安全特性，因为这样的数据被意外移除后无法由 Git 恢复。
+另一件你可能想做做的有用的事情是把文件保留在工作目录，但从暂存区中移除该文件。换句话说，你也许想将文件保留在硬盘上，但不想让 Git 对其进行跟踪管理。如果你忘了向 .gitignore 文件中添加相应的规则，不小心把一个很大的日志文件或者一些编译生成的 .a 文件添加进来，上述做法尤其有用。只需使用 --cached 选项即可：
+```shell
+git rm --cached README
+```
+你可以将文件、目录和文件的 glob 模式传递给 git rm 命令。这意味着你可以像下面这样：
+```shell
+git rm log/\*.log
+```
+请注意在 * 前面的反斜杠（\）是必需的，这是因为 shell 和 Git 先后都要处理文件名扩展。上述命令会移除 log 目录中所有扩展名为 .log 的文件。或者，你也可以像下面这样：
+```shell
+git rm \*~
+```
+这条命令会移除所有以~结尾的文件。
+## 2.2.10 移动文件
+
+Git 与很多其他版本控制系统不同，它并不会显式跟踪文件的移动。如果你在 Git 中重命名了文件，仓库的元数据并不会记录这次重命名操作。不过 Git 非常聪明，它能推断出究竟发生了什么。至于 Git 究竟如何检测到文件的移动操作，我们稍后再谈。
+因此，当你看到 Git 有一个 mv 命令时就会有点搞不明白了。在 Git 中可以执行下面的命令重命令文件：
+```shell
+git mv file_from file_to
+```
+结果没有问题。实际上，执行了这条命令再去查看状态的话，就会发现 Git 识别出了重命令后的文件：
+```shell
+git mv README.md README
+git status
+Changes to be commited:
+	(use "git reset HEAD <file>..." to unstage)
+	
+	renamed: README.md -> README
+```
+其实这相当于执行了下面的三条命令：
+```shell
+mv README.md README
+git rm README.md
+git add README
+```
+不管你是用 Git 的 mv 命令，还是直接给文件改名，Git 都能推断出这是重命名操作。唯一的区别是 git mv 只需键入一条命令而不是三条命令，所以会比较方便。更重要的是，你可以用任何你习惯的工具或方法来重命名文件，然后在提交之前再执行 Git 的 add 和 rm 命令。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
