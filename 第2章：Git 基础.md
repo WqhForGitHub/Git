@@ -539,31 +539,5 @@ origin  https://github.com/WqhForGitHub/JavaScript.git (push)
 
 
 
-=======
-最有用的一个选项是 -p，它会显示出每次提交所引入的差异。你还可以加上 -2 参数，只输出最近的两次提交
->>>>>>> c26f088aedbe33bff7fc707d428c8176c98b9307
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
