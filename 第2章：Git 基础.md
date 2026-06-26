@@ -434,6 +434,105 @@ git add forgotten_file
 git commit --amend
 ```
 最终只是产生了一个提交，因为第二个提交命令修正了第一个提交的结果。
+## 2.4.1 撤销已暂存的文件
+
+接下来的两节内容会演示如何管理暂存区和工作目录的变更。好消息是，我们用来显示上述两个区域状态的命令同样也会告诉我们如何撤销这两个区域的变更。举例来说，假设你更改了两个文件，想要分两次提交，却不小心键入了 `git add *`，把这两个文件都添加到了暂存区。这时你该如何把它们从暂存区移出呢？其实 git status 命令会提示你该如何做：
+```shell
+git add *
+git status
+On branch master
+Changes to be committed:
+	(use "git reset HEAD <file>..." to unstage)
+		
+		renamed: README.md -> README
+		modified: CONTRIBUTING.md
+```
+在 "Changes to be commited" 正下方显示的提示是 "使用 `git reset HEAD <file>...` 命令把文件移出暂存区"。所以，我们就用提示的办法把 CONTRIBUTING.md 文件移出暂存区：
+```shell
+git reset HEAD CONTRIBUTING.md
+Unstaged changes after reset:
+M CONTRIBUTING.md
+
+git status
+on branch master
+Changes to be commited:
+	(use "git reset HEAD <file>..." to unstage)
+	
+	renamed: README.md -> README
+	
+Changes not staged for commit:
+	(use "git add <file>..." to update what will be commited)
+	(use "git checkout -- <file>..." to discard changes in working directory)
+	
+	modified: CONTRIBUTING.md
+```
+这条命令看起来有点奇怪，但是它确实管用。CONTRIBUTING.md 又恢复了已修改但未暂存的状态。
+>注意
+>尽管 git reset 加上 --hard 参数时很危险，但是如果你使用上述例子中的命令来操作，工作目录中的文件就不会被改动。也就是说，执行不加选项的 git reset 是安全的，它只更改暂存区。
+
+就现在而言，了解 git reset 命令的上述用法就足够了。之后我们会在 7.7 节中详细讲解 reset 命令的细节，以及如何掌握该命令并用它做一些有意思的事情。
+## 2.4.2 撤销对文件的修改
+
+如果你突然发现，自己不再需要对 CONTRIBUTING.md 文件所做的更改，这时该怎么办？如何轻松地撤销修改并把文件恢复到上次提交时的状态（或是刚克隆仓库后的状态，或是一开始它在工作目录时的状态）？幸运的是，git status 这次也会告诉你该怎么做。在上一个例子的输出内容中，未暂存的工作区如下所示：
+```shell
+Changes not staged for commit:
+	(use "git add <file>..." to update what will be committed)
+	(use "git checkout -- <file>..." to discard changes in working directory)
+	
+	modified: CONTRIBUTING.md
+```
+上述输出很明确地告诉了你如何舍弃对文件的更改。让我们照它说的做：
+```shell
+git checkout -- CONTRIBUTING.md
+git status
+On branch master
+Changes to be committed:
+	(use "git reset HEAD <file>..." to unstage)
+	
+	renamed: README.md -> README
+```
+可以看出，之前所做的修改已经恢复了。
+>注意
+>重要的是要了解 git checkout -- [file] 是一条危险的命令。执行该命令后，任何对 [file] 文件做出的修改都会丢失，因为上述命令用之前版本的文件做了覆盖。除非你确信不再需要这些文件，否则不要用这个命令。
+
+如果你仍想保留之前对文件做出的修改，却又需要把更改暂时隐藏一会儿，使它们不影响手头的工作，这种情况下使用第 3 章将要讲到的储藏（stash）和分支的机制更好。
+请记住，在 Git 中提交的任何变更几乎总是可以进行恢复。哪怕是在已删除的分支上的提交或是被 -amend 覆盖的提交，都可以进行恢复（参见 10.7.2 节）。但是未提交过的变更一旦丢失，就很可能再也找不回来了。
+# 2.5 远程仓库的使用
+
+要参数任何一个 Git 项目的协作，你需要了解如何管理远程仓库。远程仓库是指在互联网或其他网络上托管的项目版本仓库。你可以拥有多个远程仓库，而对于其中每个仓库，你可能会拥有只读权限或者读写权限。要同别人协作，就要管理这些远程仓库，在需要分享工作成果时，向其推送数据，从中拉取数据。管理远程仓库需要知道如何添加远程仓库、移除无效的远程仓库、管理各种远程分支和设置是否跟踪这些分支，等等。在本节中，我们会讲解上述远程仓库管理技巧中的一部分。
+## 2.5.1 显示远程仓库
+
+要查看已经设置了哪些远程仓库，请使用 git remote 命令。该命令会列出每个远程仓库的简短名称。在克隆某个仓库之后，你至少可以看到名为 origin 的远程仓库，这是 Git 给克隆源服务器取的默认名称。
+```shell
+git clone https://github.com/schacon/ticgit
+cd ticgit
+git remote
+origin
+```
+你也可以使用 -v 参数，这样会显示出 Git 存储的每个远程仓库对应的URL：
+```shell
+git remote -v
+origin  https://github.com/WqhForGitHub/JavaScript.git (fetch)
+origin  https://github.com/WqhForGitHub/JavaScript.git (push)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
