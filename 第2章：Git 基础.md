@@ -508,6 +508,13 @@ Changes to be committed:
 要查看已经设置了哪些远程仓库，请使用 git remote 命令。该命令会列出每个远程仓库的简短名称。在克隆某个仓库之后，你至少可以看到名为 origin 的远程仓库，这是 Git 给克隆源服务器取的默认名称。
 ```shell
 git clone https://github.com/schacon/ticgit
+Cloning into 'ticgit'...
+remote: Reusing existing pack: 1857, done.
+remote: Total 1857（delta 0），reused（delta 0）
+Receiving objects: 100%（1857/1857），374.35 KiB | 268.00 KiB/s, done.
+Resolving deltas: 100%（772/772），done.
+Checking connectivity... done.
+
 cd ticgit
 git remote
 origin
@@ -518,6 +525,172 @@ git remote -v
 origin  https://github.com/WqhForGitHub/JavaScript.git (fetch)
 origin  https://github.com/WqhForGitHub/JavaScript.git (push)
 ```
+如果你有不止一个远程仓库，上面的命令会把它们都列出来。例如，为便于同多人协作，一个仓库会拥有多个远程仓库地址，看起来会像下面这样：
+```shell
+cd grit
+git remote -v
+bakkdoor https://github.com/bakkdoor/grit（fetch）
+bakkdoor https://github.com/bakkdoor/grit（push）
+cho45    https://github.com/cho45/grit（fetch）
+cho45    https://github.com/cho45/grit（push）
+defunkt  https://github.com/defunkt/grit（fetch）
+defunkt  https://github.com/defunkt/grit（push）
+koke     git://github.com/koke/grit.git（fetch）
+koke     git://github.com/koke/grit.git（push）
+origin   git@github.com:mojombo/grit.git（fetch）
+origin   git@github.com:mojombo/grit.git（push）
+```
+这样就可以很容易地拉取上面任何一位协作者贡献的代码。我们可能还会有推送到上述一个或更多仓库的权限，但从上面的输出中看不出来这方面的信息。
+我们还注意到上面的远程仓库地址使用了几种不同的协议。我们将在第 4 章中详细阐述其中的具体细节。
+## 2.5.2 添加远程仓库
+
+我们已经在本书之前的部分提到过如何添加远程仓库，并给出了一些演示。现在我们会讲解如何显式地添加仓库。要添加一个远程仓库，并给它起一个简短名称以便引用，可以执行 git remote add [shortname] [url] 命令：
+```shell
+git remote
+origin
+git remote add pb https://github.com/paulboone/ticgit
+git remote -v
+origin https://github.com/schacon/ticgit（fetch）
+origin https://github.com/schacon/ticgit（push）
+pb     https://github.com/paulboone/ticgit（fetch）
+pb     https://github.com/paulboone/ticgit（push）
+```
+现在你可以在命令行中使用 pb 字符串替代完整的 URL。比如，要获取 Paul 拥有而你还没有的全部数据，可以执行 git fetch pb 命令：
+```shell
+git fetch pb
+remote: Counting objects: 43, done.
+remote: Compressing objects: 100%（36/36），done.
+remote: Total 43（delta 10），reused 31（delta 5）
+Unpacking objects: 100%（43/43），done.
+From https://github.com/paulboone/ticgit
+* [new branch] master -> pb/master
+* [new branch] ticgit -> pb/ticgit
+```
+现在，你可以在本地用 pb/master 的名称访问到 Paul 的 master 分支，还可以把它和你的一个分支合并，或是检出一个本地分支便于检查其中的更改。（我们将在第 3 章中详细讲述分支是什么以及如何使用分支。）
+## 2.5.3 从远程仓库获取和拉取数据
+
+正如刚才所见，要从远程项目获取数据，可以执行：
+```shell
+git fetch [remote-name]
+```
+这条命令会从远程仓库中获取所有本地仓库没有的数据。在执行上述命令后，你就可以在本地引用远程仓库包含的所有分支，并可以在任何时候合并或检查这些分支。
+当你克隆仓库时，克隆命令会自动添加远程仓库的地址并取名为"origin"。当随后执行 git fetch origin 时，会获取到所有自上一次克隆（或获取）之后被推送到服务器端的新增的变更数据。请注意，git fetch 命令只会把数据拉取到本地仓库，然而它并不会自动将这些数据合并到本地的工作成果中，也不会修改当前工作目录下的任何数据。在准备好之后，需要手动将这些数据合并到本地内容中。
+如果你有一个跟踪着某个远程分支的本地分支（具体细节参见 2.5.4 节和第 3 章），可以使用 git pull 命令来自动获取远程数据，并将远程分支合并入当前本地分支。这种简单易用的工作流可能会更适合你。而且默认情况下，git clone 命令会自动设置你的本地 master 分支，使其跟踪被克隆的服务器端的 master 分支（或是叫其他名称的默认远程分支）。这时候，执行 git pull 就会从被克隆的服务器上获取更新的数据，然后自动尝试将其合并入当前工作目录下的本地数据。
+## 2.5.4 将数据推送到远程仓库
+
+当你的项目进行到某个阶段，需要与他人分享你的工作成果时，就要把变更推送到远程仓库去。用到的命令很简单：git push [remote-name] [branch-name]。如果想把本地的 master 分支推送到远程的 origin 服务器上（再说一次，Git 克隆操作会自动使用上面两个名称作为默认设置），那么可以执行以下命令，把任意提交推送到服务器端：
+```shell
+git push origin master
+```
+上述命令能够正常工作的前提是必须拥有克隆下来的远程仓库的写权限，并且克隆后没有任何其他人向远程仓库推送过的数据。如果别人和你都克隆了这个仓库，而他先推送，你后推送，那么你的这次推送会直接被拒绝。你必须先拉取别人的变更，将其整合到你的工作成果中，然后才能推送。有关推送到远程服务器的详细服务器，请参见第 3 章。
+## 2.5.5 检查远程仓库
+
+要查看关于某一远程仓库的更多信息，可使用 git remote show [remote-name] 命令。如果给该命令提供一个仓库的短名称，比如 origin，就会看到如下输出：
+```shell
+git remote show origin
+* remote origin
+  Fetch URL: https://github.com/schacon/ticgit
+  Push  URL: https://github.com/schacon/ticgit
+  HEAD branch: master
+  Remote branches:
+	  master           tracked
+	  dev-branch       tracked
+  Local branch configured for 'git pull':
+	  master merges with remote master
+  Local ref configured for 'git push':
+	  master pushes to master (up to date)
+```
+上述命令列出了远程仓库的 URL 地址以及每个分支的跟踪信息。这条命令会输出一些很有帮助的信息，比如告诉你在 master 分支上执行 git pull 会获取到所有的远程引用，然后自动合并入 master 分支。它还显示了拉取下来的所有远程引用的信息。
+上述示例给出的是一种简单的情况。当你大量使用 Git 时，git remote show 可能会给出非常多的信息：
+```shell
+git remote show origin
+* remote origin
+  URL: https://github.com/my-org/complex-project
+  Fetch URL: https://github.com/my-org/complex-project
+  Push  URL: https://github.con/my-org/complex-project
+  HEAD branch: master
+  Remote branches:
+	  master            tracked
+	  dev-branch        tracked
+	  markdown-strip    tracked
+	  issue-43          new (next fetch will store in remotes/origin)
+	  issue-45          new (next fetch will store in remotes/origin)
+	  refs/remotes/origin/issue-11 stale (use 'git remote prune' to remove)
+  Local branches configured for 'gir pull':
+	  dev-branch merges with remote dev-branch
+	  master merges with remote dev-branch
+  Local refs configured for 'git push':
+	  dev-branch        pushes to dev-branch             (up to date)
+	  markdown-strip    pushes to markdown-strip         (up to date)
+	  master            pushed to master                 (up to date)
+```
+上述输出会告诉你，当在本地某个分支执行 git push 时，会推送到远程的哪个对应分支上去。
+另外，它还会显示服务器上有哪些本地还没有的远程分支，哪些本地分支对应的远程分支已被删除，执行 git pull 时哪些分支会自动合并最新的变更。
+## 2.5.6 删除和重命名远程仓库
+
+可以用 git remote rename 来重命名远程仓库。如果想要把 pb 重命名为 paul，可以用 git remote rename 命令来实现，如下所示。
+```shell
+git remote rename pb paul
+git remote
+origin
+paul
+```
+值得一提的是，上述操作也会更改远程分支的名称。先前的 pb/master 分支现在变成了 paul/master。
+有时出于某种原因，需要删除某个远程仓库地址，比如当你迁移了服务器地址，或是不再使用某一仓库镜像，又或是某个参与者退出协作时，就可以使用 git remote rm 命令，如下所示。
+```shell
+git remote rm paul
+git remote
+origin
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
