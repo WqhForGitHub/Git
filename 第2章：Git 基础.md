@@ -668,6 +668,99 @@ v1.8.5.3
 v1.8.5.4
 v1.8.5.5
 ```
+## 2.6.2 创建标签
+
+Git 使用的标记主要有两种类型：轻量（lightweight）标签和注释（annotated）标签。
+轻量标签很像是一个不变的分支，它只是一个指向某次提交的指针。
+注释标签则会作为完整的对象存储在 Git 数据库中。Git 会计算其校验和，除此之外还包含其他信息，比如标记者（tagger）的名字、邮箱地址和标签的创建时间，还有标记消息（tagging message），另外还可以利用 GNU Privacy Guard（GPG）对它们进行签名和验证。一般推荐创建注释标签，这样可以包含上述所有信息。但如果你需要的只是一个临时标签，或者由于某些原因不需要包含那些额外信息，也可以用轻量标签。
+## 2.6.3 注释标签
+
+创建注释标签很简单，只需要执行带有 -a 选项的 tag 命令即可：
+```shell
+git tag -a v1.4 -m "my version 1.4"
+git tag
+v0.1
+v1.3
+v1.4
+```
+-m 选项指定了标记信息，它会伴随着标签一起被存储。如果你没有为注释标签指定标记信息，Git 会打开文本编辑器以便你进行输入。
+执行 git show 命令可以看到标签数据以及对应的提交：
+```shell
+git show v1.4
+tag v1.4
+Tagger: Ben Straub <ben@straub.cc>
+Date: Sat May 3 20:19:12 2014 -0700
+
+my version 1.4
+
+commit: ca82a6dff817ec66f44342007202690a93763949
+Author: Scott Chacon <schacon@gee-mail.com>
+Date: Mon Mar 17 21:52:11 2008 -0700
+
+	changed the version number
+```
+上述命令的输出显示了标记者信息、提交被标记的日期以及注释消息，最后是提交信息。
+## 2.6.4 轻量标签
+
+另一种用来标记提交的方法是使用轻量标签。这种标签基本上就是把提交的校验和保存到文件中，除此之外，不包含其他任何信息。创建一个轻量标签时不需要使用 -a、-s 或 -m 选项：
+```shell
+git tag -v1.4-lw
+git tag
+v0.1
+v1.3
+v1.4
+v1.4-lw
+v1.5
+```
+如果你现在在这个标签上执行 git show，除了提交信息之外，不会看到别的标签信息。
+```shell
+git show v1.4-lw
+commit ca82a6dff817ec66f44342007202690a93763949
+Author: Scott Chacon <schacon@gee-mail.com>
+Date: Mon Mar 17 21:52:11 2008 -0700
+
+	Changed the version number
+```
+## 2.6.5 补加标签
+
+你还可以随后再给之前的提交添加标签。假设你的提交历史看起来像下面这样：
+```shell
+git log --pretty=oneline
+```
+现在，假如你忘记了给项目添加 v1.2 版本的标签，而该版本对应的应该是 "updated rakefile" 这次提交。你仍然可以在这时标记这次提交。只需在命令最后指定提交的校验和（或部分校验和）就可以了：
+```shell
+git tag -a v1.2 9fceb02
+```
+这时就可以看到标记过的提交了：
+```shell
+git tag
+v0.1
+v1.2
+v1.3
+v1.4
+v1.4-lw
+v1.5
+
+git show v1.2
+tag v1.2
+Tagger: Scott Chacon <schacon@gee-mail.com>
+Date: Mon Feb 9 15:32:16 2009 -0800
+
+version 1.2
+commit 9fceb02d0ae598e95dc970b74767f19372d61af8
+Author: Magnus Chacon <mchacon@gee-mail.com>
+Date: Sun Apr 27 20:43:35 2008 -0700
+
+	updated rakefile
+```
+
+
+
+
+
+
+
+
 
 
 
