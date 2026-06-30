@@ -753,6 +753,82 @@ Date: Sun Apr 27 20:43:35 2008 -0700
 
 	updated rakefile
 ```
+## 2.6.6 共享标签
+
+默认情况下，git push 命令不会把标签传输到远程服务器上。在创建了标签之后，你必须明确地将标签推送到共享服务器上。这个过程有点像推送分支，对应的命令是 git push origin [tagname]。
+```shell
+git push origin v1.5
+Counting objects: 14, done.
+Delta compression using up to 8 threads.
+Compressing objects: 100%（12/12），done.
+Writing objects: 100%（14/14），2.05 KiB | 0 bytes/s, done.
+Total 14（delta 3），reused 0（delta 0）
+To git@github.com:schacon/simplegit.git
+ * [new tag] v1.5 -> v1.5
+```
+如果你有很多标签需要一次性推送，可以使用 git push 命令的 --tags 选项。这会把所有服务器上还没有的标记都推送过去。
+```shell
+git push origin --tags
+Counting objects: 1, done.
+Writing objects: 100%（1/1），160 bytes | 0 bytes/s，done.
+Total 1（delta 0），reused 0（delta 0）
+To git@github.com:schacon/simplegit.git
+ * [new tag] v1.4 -> 1.4
+ * [new tag] v1.4-lw -> v1.4-lw
+```
+执行完上述命令后，如果其他人此时对仓库执行克隆或拉取操作，他们也能够得到所有的标签。
+## 2.6.7 检出标签
+
+你是无法在 Git 中真正检出一个标签的，这是因为标签无法移动。如果想将某个版本的仓库放入像是标签的工作目录中，可以使用 git checkout -b [branchname] [tagname] 在特定标签上创建一个新的分支：
+```shell
+git checkout -b version2 v2.0.0
+Switched to a new branch 'version2'
+```
+如果你执行上面的操作并完成了提交，那么 version2 分支会和你的 v2.0.0 标签略有不同，因为它携带了新的变更，所以要小心操作。
+# 2.7 Git 别名
+
+在结束本章的 Git 基础知识讲解之前，还有一个小技巧要告诉你，它能够使 Git 更加易用、简单，同时也更容易掌握，这就是别名。本书之后的章节并不会涉及别名，但还是应该了解一下其用法。
+如果你键入的 Git 命令不完整，Git 不会自动推断并补全命令。虽然如此，但如果你不想每次都费力地键入完整的 Git 命令，也可以轻松地通过 git config 设置每个 Git 命令的别名。下面是一些你可能想设置的别名：
+```shell
+git config --global alias.co checkout
+git config --global alias.br branch
+git config --global alias.ci commit
+git config --global alias.st status
+```
+执行这些命令后，你就可以用 git ci 来替代 git commit 了。随着对 Git 使用的逐渐深入，你也可能经常会用到其他一些 Git 命令，这时候别忘了创建新的命令别名来简化工作。
+这种技巧还可以用来创建那些你认为 Git 本就该提供，但实际却没有的命令。比如，把文件从暂存区移出这个命令不太好用，因此你可以给这条 Git 命令取个别名：
+```shell
+git config --global alias.unstage 'reset HEAD --'
+```
+执行完上面的命令互，以下两个命令就完全等价了：
+```shell
+git unstage fileA
+git reset HEAD --fileA
+```
+这样看起来会更清晰一点。还有一种常见做法是添加一个能够显示最后一次提交信息的命令别名，就像下面这样：
+```shell
+git config --global alias.last 'log -1 HEAD'
+```
+这样一来，就可以很容易地看到最后一次提交的信息了：
+```shell
+git last
+commit 66938dae3329c7aebe598c2256a8e6af90d04646
+Author: Josh Goebel <dreamer3@example.com>
+Date: Tue Aug 26 19:48:51 2008 +0800
+test for current head
+
+Signed-off-by: Scott Chacon <schacon@example.com>
+```
+如你所见，Git 只是简单地把新创建的别名替换成原有的 Git 命令。但有时候你想执行的是外部命令，而不是 Git 系统的命令。这种情况下要给外部命令前面加上 ! 字符。如果你自己编写了 Git 仓库的辅助工具，这样的别名就会派上用场了。举例来说，我们可以通过指定 git visual 别名，让它执行 gitk，如下所示。
+```shell
+git config --global alias.visual '!gitk'
+```
+
+
+
+
+
+
 
 
 
