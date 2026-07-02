@@ -82,6 +82,127 @@ Git 中的分支实际上就是一个简单的文件，其中只包含了该分�
 （2）创建新的分支来进行此次问题的热修补工作
 （3）通过测试后，合并热修补分支并推送到生产环境中
 （4）切换回之前的需求分支上继续工作
+## 3.2.1 基本的分支操作
+
+首先，假设你在所工作的项目上已经完成了一些提交。
+![简单的提交历史](https://front-end-1257950569.cos.ap-guangzhou.myqcloud.com/%E7%B2%BE%E9%80%9AGit%EF%BC%88%E7%AC%AC2%E7%89%88%EF%BC%89/%E7%AC%AC3%E7%AB%A0%EF%BC%9AGit%20%E5%88%86%E6%94%AF%E6%9C%BA%E5%88%B6/%E7%AE%80%E5%8D%95%E7%9A%84%E6%8F%90%E4%BA%A4%E5%8E%86%E5%8F%B2.png)
+这时，你决定要修复公司所用的问题跟踪系统中的 #53 问题。可以使用带有 -b 选项的 git checkout 命令来创建并切换到新分支上：
+```shell
+git checkout -b iss53
+Switched to a new branch "iss53"
+```
+上面这条命令相当于：
+```shell
+git branch iss53
+git checkout iss53
+```
+![创建新的分支指针](https://front-end-1257950569.cos.ap-guangzhou.myqcloud.com/%E7%B2%BE%E9%80%9AGit%EF%BC%88%E7%AC%AC2%E7%89%88%EF%BC%89/%E7%AC%AC3%E7%AB%A0%EF%BC%9AGit%20%E5%88%86%E6%94%AF%E6%9C%BA%E5%88%B6/%E5%88%9B%E5%BB%BA%E6%96%B0%E7%9A%84%E5%88%86%E6%94%AF%E6%8C%87%E9%92%88.png)
+接下来继续工作，并又进行了几次提交。这么做会让 iss53 分支指针向前移动，这是因为你当前检出的就是 iss53 分支（换句话说，HEAD 指针当前指向该分支）：
+```shell
+vim index.html
+git commit -a -m 'added a new footer [issue 53]'
+```
+![iss53分支指针会随着工作进展而向前移动](https://front-end-1257950569.cos.ap-guangzhou.myqcloud.com/%E7%B2%BE%E9%80%9AGit%EF%BC%88%E7%AC%AC2%E7%89%88%EF%BC%89/%E7%AC%AC3%E7%AB%A0%EF%BC%9AGit%20%E5%88%86%E6%94%AF%E6%9C%BA%E5%88%B6/iss53%E5%88%86%E6%94%AF%E6%8C%87%E9%92%88%E4%BC%9A%E9%9A%8F%E7%9D%80%E5%B7%A5%E4%BD%9C%E8%BF%9B%E5%B1%95%E8%80%8C%E5%90%91%E5%89%8D%E7%A7%BB%E5%8A%A8.png)
+现在，你接到一个电话，说网站有个问题需要立即修复。如果没有 Git 的帮助，你要么把你的修复补丁和 iss53 的变更一起部署，要么就花费大量精力去恢复之前针对 iss53 所做的工作，好让你制作的修复补丁单独上线。如今你要做的就是切换回 master 分支即可。
+但先别急，在你切换分支之前要注意的是，如果你的工作目录或者暂存区存在着未提交的更改，并且这些更改与你要切换到的分支冲突，Git 就不允许你切换分支。在切换分支时，最好是保持一个干净地工作区域。稍后我们会介绍几种绕过这个问题的办法：储藏和修订提交。就现在而言，让我们假定你已经提交了所有修改，这样你就可以切换回 master 分支了：
+```shell
+git checkout master
+Switched to branch 'master'
+```
+此时项目的工作目录就与你开始处理 #53 问题之前的状态一模一样了，你就可以集中精力制作热补丁了。这里有一点需要强调：当你切换分支时，Git 会把工作目录恢复到你切换到的分支上最后一次提交时的状态。
+接下来需要制作热补丁。让我们创建 hotfix 分支并在这个分支上展示修复工作：
+```shell
+git checkout -b hotfix
+Switched to a new branch 'hotfix'
+vim index.html
+git commit -a -m 'fixed the broken email address'
+[hotfix 1fb7853] fixed the broken email address
+1 file changed, 2 insertions(+)
+```
+![由master分支分化出来的hotfix分支](https://front-end-1257950569.cos.ap-guangzhou.myqcloud.com/%E7%B2%BE%E9%80%9AGit%EF%BC%88%E7%AC%AC2%E7%89%88%EF%BC%89/%E7%AC%AC3%E7%AB%A0%EF%BC%9AGit%20%E5%88%86%E6%94%AF%E6%9C%BA%E5%88%B6/%E7%94%B1master%E5%88%86%E6%94%AF%E5%88%86%E5%8C%96%E5%87%BA%E6%9D%A5%E7%9A%84hotfix%E5%88%86%E6%94%AF.png)
+你可以运行测试来确保热补丁的效果无误，然后将其合并到 master 分支，以便部署到生产环境。使用 git merge 命令来完成上述操作：
+```shell
+git checkout master
+git merge hotfix
+Updating f42c576...3a0874c
+Fast-forward
+	index.html | 2 ++
+	1 file changed, 2 insertions(+)
+```
+你会注意到合并时出现了 "fast-forward" 的提示。由于当前所在的 master 分支所指向的提交是要并入的 hotfix 分支的直接上游，因而 Git 会将 master 分支指针向前移动。换句话说，当你试图去合并两个不同的提交，而顺着其中一个提交的历史可以直接到达另一个提交时，Git 就会简化合并操作，直接把分支指针向前移动，因为这种单线历史不存在有分歧的工作。这就叫作 ”fast-forward“。
+现在你的变更已经进入了 master 分支所指向的提交快照，可以部署补丁了。
+![master分支被快进到hotfix分支](https://front-end-1257950569.cos.ap-guangzhou.myqcloud.com/%E7%B2%BE%E9%80%9AGit%EF%BC%88%E7%AC%AC2%E7%89%88%EF%BC%89/%E7%AC%AC3%E7%AB%A0%EF%BC%9AGit%20%E5%88%86%E6%94%AF%E6%9C%BA%E5%88%B6/master%E5%88%86%E6%94%AF%E8%A2%AB%E5%BF%AB%E8%BF%9B%E5%88%B0hotfix%E5%88%86%E6%94%AF.png)
+在部署了这次极其重要的热修复补丁之后，你准备要切换回之前被打断的工作上去。不过先别急，首先你要把已经用不着的 hotfix 分支删除，该分支和 master 分支指向的位置相同。使用 git branch 的 -d 选项来删除这个分支：
+```shell
+git branch -d hotfix
+Deleted branch hotfix（3a0874c）.
+```
+现在你可以切换回之前未完成的 #53 问题分支，并且继续进行工作：
+```shell
+git checkout iss53
+Switched to branch "iss53"
+vim index.html
+git commit -a -m 'finished the new footer [issue 53]'
+[iss53 ad82d7a] finished the new footer [issue 53]
+1 file changed, 1 insertion(+)
+```
+![继续iss53分支上的工作](https://front-end-1257950569.cos.ap-guangzhou.myqcloud.com/%E7%B2%BE%E9%80%9AGit%EF%BC%88%E7%AC%AC2%E7%89%88%EF%BC%89/%E7%AC%AC3%E7%AB%A0%EF%BC%9AGit%20%E5%88%86%E6%94%AF%E6%9C%BA%E5%88%B6/%E7%BB%A7%E7%BB%ADiss53%E5%88%86%E6%94%AF%E4%B8%8A%E7%9A%84%E5%B7%A5%E4%BD%9C.png)
+值得注意的是，iss53 分支并不包含你在 hotfix 分支上做过的工作。如果需要把上述修补工作并入 iss53，就需要执行 git merge master 使得 master 分支合并到 iss53 中，或者可以等到要把 iss53 合并回 master 分支时再把热修补的工作整合进来。
+## 3.2.2 基本的合并操作
+
+假设现在 #53 的工作已经完工，可以合并回 master 分支了。这次的合并操作实现起来与之前合并 hotfix 分支的操作差不多。只需要切换到 master 分支上，并执行 git merge 命令即可：
+```shell
+git checkout master
+Switched to branch 'master'
+git merge iss53
+Merge made by the 'recursive' strategy.
+index.html | 1 +
+1 file changed, 1 insertion(+)
+```
+这次合并看起来与之前 hotfix 的合并有点不一样。在这次合并中，开发历史从某个早先的时间点开始有了分叉。由于当前 master 分支指向的提交并不是 iss53 分支的直接祖先，因而 Git 必须要做一些额外的工作。本例中，Git 执行的操作是简单的三方合并。三方合并操作会使用两个待合并分支上最新提交的快照，以及这两个分支的共同祖先的提交快照（如下图所示）。
+![在一次典型的合并操作中用到的三个提交快照](https://front-end-1257950569.cos.ap-guangzhou.myqcloud.com/%E7%B2%BE%E9%80%9AGit%EF%BC%88%E7%AC%AC2%E7%89%88%EF%BC%89/%E7%AC%AC3%E7%AB%A0%EF%BC%9AGit%20%E5%88%86%E6%94%AF%E6%9C%BA%E5%88%B6/%E5%9C%A8%E4%B8%80%E6%AC%A1%E5%85%B8%E5%9E%8B%E7%9A%84%E5%90%88%E5%B9%B6%E6%93%8D%E4%BD%9C%E4%B8%AD%E7%94%A8%E5%88%B0%E7%9A%84%E4%B8%89%E4%B8%AA%E6%8F%90%E4%BA%A4%E5%BF%AB%E7%85%A7.png)
+与之前简单地向前移动分支指针的做法不同，这一次 Git 会基于三方合并的结果创建新的快照，然后再创建一个提交指向新建的快照。这个提交叫做合并提交。合并提交的特殊性在于它拥有不止一个父提交。
+![合并提交](https://front-end-1257950569.cos.ap-guangzhou.myqcloud.com/%E7%B2%BE%E9%80%9AGit%EF%BC%88%E7%AC%AC2%E7%89%88%EF%BC%89/%E7%AC%AC3%E7%AB%A0%EF%BC%9AGit%20%E5%88%86%E6%94%AF%E6%9C%BA%E5%88%B6/%E5%90%88%E5%B9%B6%E6%8F%90%E4%BA%A4.png)
+值得注意的是，Git 会自己判断最优的共同祖先并将其作为合并基础。这种做法与诸如 CVS 或 Subversion（1.5 以前的版本）等较老的工具不同。在这些较老的工具中，开发者必须自己找出最优的合并基础，来执行合并操作。以上区别使得 Git 在合并操作方面比其他工具要简单得多。
+现在你的工作成果已经合并进来了，你就不再需要 iss53 分支了。你可以在问题追踪系统里面关闭这个问题并删除分支。
+```shell
+git branch -d iss53
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
