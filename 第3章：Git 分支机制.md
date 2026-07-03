@@ -168,6 +168,54 @@ index.html | 1 +
 ```shell
 git branch -d iss53
 ```
+## 3.2.3 基本的合并冲突处理
+
+有时候，上述合并过程并不会那么顺利。如果你在要合并的两个分支上都改了同一个文件的同一部分内容，Git 就没办法干净地合并这两个分支。假设你在 #53 问题上的工作和在 hotfix 分支上的工作都修改了同一文件的同一部分，那么就会引起合并冲突，你会看到类似下面的输出：
+```shell
+git merge iss53
+Auto-merging index.html
+CONFLICT（content）:Merge conflict in index.html
+Automatic merge failed; fix conflicts and then commit the result.
+```
+Git 并没有自动创建新的合并提交。它会暂停整个合并过程，等待你来解决冲突。在发生了合并冲突后，要查看哪些文件没有被合并，可以执行 git status：
+```shell
+git status
+On branch master
+You have unmerged paths.
+	(fix conflicts and run "git commit")
+
+Unmerged paths:
+	(use "git add <file>..." to mark resolution)
+	
+		both modified: index.html
+		
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+任何存在着未解决的合并冲突的文件都会显示成未合并状态。Git 会给这些有冲突的文件添加标准的待解决冲突标记，以便你手动打开这些文件来解决冲突。可以看到冲突文件包含一个类似下面这样的区域：
+```html
+<<<<<<< HEAD:index.html
+<div id="footer">contact: email.support@github.com</div>
+=======
+<div id="footer">
+	please contact us at support@github.com
+</div>
+>>>>>>> iss53:index.html
+```
+上面这段代码中，HEAD 版本的内容显示在上半部分（======= 以上的部分），iss53 分支的内容则在下半部分。其中 HEAD 指向的是 master 分支，因为你在执行 merge 命令之前已经切换到该分支。可以选择使用任一版本的内容或是自己整合两者的内容来解决冲突。例如，你可以把整段内容替换成以下代码：
+```html
+<div id="footer">
+please contact us at email.support@github.com
+</div>
+```
+
+
+
+
+
+
+
+
+
 
 
 
