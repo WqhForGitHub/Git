@@ -254,6 +254,119 @@ no changes added to commit (use "git add" and/or "git commit -a")
 ```html
 <div id="footer">please contact us at email.support@github.com</div>
 ```
+这种解决方法实际上是把两个版本的内容各取一部分整合在一起，并去掉了 <<<<<<<、======= 和 >>>>>>> 这三行内容。在解决了每个冲突文件的额所有冲突部分后，就可以执行 git add 来把每个文件标记为冲突已解决状态。在 Git 中，这可以通过把文件添加到暂存区来实现。
+若要使用图形化工具解决冲突，可以执行 git mergetool，该命令会启动相应的图形化合并工具，并引导你一步步解决冲突：
+```shell
+git mergetool
+
+This message is displayed because 'merge.tool' is not configured.
+See 'git mergetool --tool-help' or 'git help config' for more details.
+'git mergetool' will now attempt to use one of the following tools:
+opendiff kdiff3 tkdiff xxdiff meld tortoisemerge gvimdiff diffuse diffmerge ecmerge p4merge
+Merging:
+index.html
+
+Normal merge conflict for 'index.html':
+ {local}: modified file
+ {remote}: modified file
+Hit return to start merge resolution tool (opendiff):
+```
+如果你想选择除默认工具之外的其他合并工具（在本例中 Git 使用的是 opendiff 工具，因为所处的运行环境是 Mac），则可以在上方 one of the following tools 的提示下找到所有可用的合并工具列表。键入要使用的工具名就可以了。
+>注意
+>如果需要更多高级工具来解决复杂的合并冲突，请参阅 7.8 节了解关于合并的更多信息。
+
+当退出合并工具时，Git 会询问合并是否已经成功完成。如果合并成功，它就会将合并后的文件添加到暂存区，并将其标记为冲突已解决的状态。可以再次执行 git status 来确认所有的冲突都已解决：
+```shell
+git status
+On branch master
+All conflicts fixed but you are still merging.
+ (use "git commit" to conclude merge)
+ 
+Changes to be committed:
+
+	modified: index.html
+```
+如果觉得满意了并确认了所有冲突都已解决，相应的文件也进入了暂存区，就可以通过 git commit 命令来完成此次合并提交。默认的提交信息如下所示：
+```shell
+Merge branch 'iss53'
+
+Conflicts:
+	index.html
+#
+# It looks like you may be committing a merge.
+# If this is not correct, please remove the file
+#       .git/MERGE_HEAD
+# and try again.
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and empty message aborts the commit.
+# On branch master
+# All conflicts fixed but you are still merging.
+#
+# Changes to be committed:
+#       modified: index.html
+#
+```
+如果想给将来审阅此次合并的人一点帮助，那么可以修改上述合并信息，提供更多关于你如何进行此次合并的细节，比如你做了什么，以及为什么这么做。
+# 3.3 分支管理
+
+到现在为止，你已经尝试过创建、合并以及删除分支。现在让我们试试一些分支管理工具。这些工具在经常使用分支时会很有用。
+git branch 命令并不只是可以用来创建和删除分支。如果你执行不带参数的 git branch 命令，就会得到当前所有分支的简短列表，如下所示：
+```shell
+git branch
+  iss53
+* master
+  testing
+```
+请留意 master 分支前面的 * 字符，它表明了你当前所在的分支（即 HEAD 指向的分支）。这意味着如果你现在进行一次提交，master 分支指针会随着你的新提交向前移动。要看到每个分支上的最新提交，可以执行 git branch -v：
+```shell
+git branch -v
+  iss53   93b412c  fix javascript issue
+* master  7a98805  Merge branch 'iss53'
+  testing 782fd34  add scott to the author list in the readmes
+```
+另外两个很有用的选项是 --merged 和 --no-merged。这两个选项分别是筛选已并入当前分支的所有分支和筛选尚未并入的所有分支。要查看有哪些分支已经并入当前分支，可以执行 git branch --merged：
+```shell
+git branch --merged
+  iss53
+* master
+```
+由于之前 iss53 已被合并，因此它出现在了上述列表中。一般来说，对于前面没有 * 的分支，可以使用 git branch -d 把它们全部删除。你已经把这些分支上的工作纳入到了其他分支中，所以不会因此丢失任何东西。
+要查看包含尚未合并的工作的所有分支，可以使用 git branch --no-merged：
+```shell
+git branch --no-merged
+  testing
+```
+上述命令会显示出另一个分支。因为该分支包含了尚未合并到主线的工作，所以 git branch -d 并不能成功删除它：
+```shell
+git branch -d testing
+error: The branch 'testing' is not fully merged.
+If you are sure you want to delete it, run 'git branch -D testing'.
+```
+如果你确实想要删除该分支并丢弃其上的所有工作，可以按照上述输出的提示信息使用 -D 选项强制删除。
+# 3.4 与分支有关的工作流
+
+既然你已经学会了基本的分支和合并操作，应该用它们来做点什么呢？在本节中，我们会讲解一些常见的工作流。这些工作流之所以能够存在，要得益于 Git 的轻量级分支机制。你可以根据自己项目的实际情况自由选用它们。
+## 3.4.1 长期分支
+
+由于 Git 简洁的三方合并机制，在较长的一段时间内多次把一个分支合并到另一分支是很容易的操作。这意味着你可以拥有多个开放的分支，以用于开发周期的不同阶段：你也可以经常性地把其中某些分支合并到其他的分支去。
+很多使用 Git 的开发者都喜欢用这种方式构建他们自己的工作流，例如，其中一种流程就是在 master 分支只存放稳定版的代码，即已经发布的版本或即将发布版本的代码。他们还会使用另一个叫做 develop 或 next 的平行分支用于开发，或是用于测试代码的稳定性。这个分支不会一直保持稳定版本，不过一旦它达到稳定版本的状态，就可以把它合并到 master 分支去。这样的分支也被用来接受主题分支（短期分支，例如之前的 iss53 分子）的合并，来确保这些新开发的特性能够通过所有测试而不会引发新的错误。
+实际上，我们刚才谈论的是随着你的提交操作而不断移动的分支指针。稳定的分支会在提交历史中较为靠后，而前沿的开发分支会较为靠前。
+![稳定性渐进变化的不同分支的线性视图](https://front-end-1257950569.cos.ap-guangzhou.myqcloud.com/%E7%B2%BE%E9%80%9AGit%EF%BC%88%E7%AC%AC2%E7%89%88%EF%BC%89/%E7%AC%AC3%E7%AB%A0%EF%BC%9AGit%20%E5%88%86%E6%94%AF%E6%9C%BA%E5%88%B6/%E7%A8%B3%E5%AE%9A%E6%80%A7%E6%B8%90%E8%BF%9B%E5%8F%98%E5%8C%96%E7%9A%84%E4%B8%8D%E5%90%8C%E5%88%86%E6%94%AF%E7%9A%84%E7%BA%BF%E6%80%A7%E8%A7%86%E5%9B%BE.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 这种解决方法实际上是把两个版本的内容各取一部分整合在一起，并去掉了 <<<<<<<、======= 和 >>>>>>> 这三行内容。在解决了每个冲突文件的额所有冲突部分后，就可以执行 git add 来把每个文件标记为冲突已解决状态。在 Git 中，这可以通过把文件添加到暂存区来实现。
 若要使用图形化工具解决冲突，可以执行 git mergetool，该命令会启动相应的图形化合并工具，并引导你一步步解决冲突：
