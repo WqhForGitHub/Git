@@ -347,139 +347,6 @@ If you are sure you want to delete it, run 'git branch -D testing'.
 # 3.4 与分支有关的工作流
 
 既然你已经学会了基本的分支和合并操作，应该用它们来做点什么呢？在本节中，我们会讲解一些常见的工作流。这些工作流之所以能够存在，要得益于 Git 的轻量级分支机制。你可以根据自己项目的实际情况自由选用它们。
-## 3.4.1 长期分支
-
-由于 Git 简洁的三方合并机制，在较长的一段时间内多次把一个分支合并到另一分支是很容易的操作。这意味着你可以拥有多个开放的分支，以用于开发周期的不同阶段：你也可以经常性地把其中某些分支合并到其他的分支去。
-很多使用 Git 的开发者都喜欢用这种方式构建他们自己的工作流，例如，其中一种流程就是在 master 分支只存放稳定版的代码，即已经发布的版本或即将发布版本的代码。他们还会使用另一个叫做 develop 或 next 的平行分支用于开发，或是用于测试代码的稳定性。这个分支不会一直保持稳定版本，不过一旦它达到稳定版本的状态，就可以把它合并到 master 分支去。这样的分支也被用来接受主题分支（短期分支，例如之前的 iss53 分子）的合并，来确保这些新开发的特性能够通过所有测试而不会引发新的错误。
-实际上，我们刚才谈论的是随着你的提交操作而不断移动的分支指针。稳定的分支会在提交历史中较为靠后，而前沿的开发分支会较为靠前。
-![稳定性渐进变化的不同分支的线性视图](https://front-end-1257950569.cos.ap-guangzhou.myqcloud.com/%E7%B2%BE%E9%80%9AGit%EF%BC%88%E7%AC%AC2%E7%89%88%EF%BC%89/%E7%AC%AC3%E7%AB%A0%EF%BC%9AGit%20%E5%88%86%E6%94%AF%E6%9C%BA%E5%88%B6/%E7%A8%B3%E5%AE%9A%E6%80%A7%E6%B8%90%E8%BF%9B%E5%8F%98%E5%8C%96%E7%9A%84%E4%B8%8D%E5%90%8C%E5%88%86%E6%94%AF%E7%9A%84%E7%BA%BF%E6%80%A7%E8%A7%86%E5%9B%BE.png)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-这种解决方法实际上是把两个版本的内容各取一部分整合在一起，并去掉了 <<<<<<<、======= 和 >>>>>>> 这三行内容。在解决了每个冲突文件的额所有冲突部分后，就可以执行 git add 来把每个文件标记为冲突已解决状态。在 Git 中，这可以通过把文件添加到暂存区来实现。
-若要使用图形化工具解决冲突，可以执行 git mergetool，该命令会启动相应的图形化合并工具，并引导你一步步解决冲突：
-
-```shell
-git mergetool
-
-This message is displayed because 'merge.tool' is not configured.
-See 'git mergetool --tool-help' or 'git help config' for more details.
-'git mergetool' will now attempt to use one of the following tools:
-opendiff kdiff3 tkdiff xxdiff meld tortoisemerge gvimdiff diffuse diffmerge ecmerge p4merge
-Merging:
-index.html
-
-Normal merge conflict for 'index.html':
- {local}: modified file
- {remote}: modified file
-Hit return to start merge resolution tool (opendiff):
-```
-
-如果你想选择除默认工具之外的其他合并工具（在本例中 Git 使用的是 opendiff 工具，因为所处的运行环境是 Mac），则可以在上方 one of the following tools 的提示下找到所有可用的合并工具列表。键入要使用的工具名就可以了。
-
-> 注意
-> 如果需要更多高级工具来解决复杂的合并冲突，请参阅 7.8 节了解关于合并的更多信息。
-
-当退出合并工具时，Git 会询问合并是否已经成功完成。如果合并成功，它就会将合并后的文件添加到暂存区，并将其标记为冲突已解决的状态。可以再次执行 git status 来确认所有的冲突都已解决：
-
-```shell
-git status
-On branch master
-All conflicts fixed but you are still merging.
- (use "git commit" to conclude merge)
-
-Changes to be committed:
-
-	modified: index.html
-```
-
-如果觉得满意了并确认了所有冲突都已解决，相应的文件也进入了暂存区，就可以通过 git commit 命令来完成此次合并提交。默认的提交信息如下所示：
-
-```shell
-Merge branch 'iss53'
-
-Conflicts:
-	index.html
-#
-# It looks like you may be committing a merge.
-# If this is not correct, please remove the file
-#       .git/MERGE_HEAD
-# and try again.
-
-# Please enter the commit message for your changes. Lines starting
-# with '#' will be ignored, and empty message aborts the commit.
-# On branch master
-# All conflicts fixed but you are still merging.
-#
-# Changes to be committed:
-#       modified: index.html
-#
-```
-
-如果想给将来审阅此次合并的人一点帮助，那么可以修改上述合并信息，提供更多关于你如何进行此次合并的细节，比如你做了什么，以及为什么这么做。
-
-# 3.3 分支管理
-
-到现在为止，你已经尝试过创建、合并以及删除分支。现在让我们试试一些分支管理工具。这些工具在经常使用分支时会很有用。
-git branch 命令并不只是可以用来创建和删除分支。如果你执行不带参数的 git branch 命令，就会得到当前所有分支的简短列表，如下所示：
-
-```shell
-git branch
-  iss53
-* master
-  testing
-```
-
-请留意 master 分支前面的 \* 字符，它表明了你当前所在的分支（即 HEAD 指向的分支）。这意味着如果你现在进行一次提交，master 分支指针会随着你的新提交向前移动。要看到每个分支上的最新提交，可以执行 git branch -v：
-
-```shell
-git branch -v
-  iss53   93b412c  fix javascript issue
-* master  7a98805  Merge branch 'iss53'
-  testing 782fd34  add scott to the author list in the readmes
-```
-
-另外两个很有用的选项是 --merged 和 --no-merged。这两个选项分别是筛选已并入当前分支的所有分支和筛选尚未并入的所有分支。要查看有哪些分支已经并入当前分支，可以执行 git branch --merged：
-
-```shell
-git branch --merged
-  iss53
-* master
-```
-
-由于之前 iss53 已被合并，因此它出现在了上述列表中。一般来说，对于前面没有 \* 的分支，可以使用 git branch -d 把它们全部删除。你已经把这些分支上的工作纳入到了其他分支中，所以不会因此丢失任何东西。
-要查看包含尚未合并的工作的所有分支，可以使用 git branch --no-merged：
-
-```shell
-git branch --no-merged
-  testing
-```
-
-上述命令会显示出另一个分支。因为该分支包含了尚未合并到主线的工作，所以 git branch -d 并不能成功删除它：
-
-```shell
-git branch -d testing
-error: The branch 'testing' is not fully merged.
-If you are sure you want to delete it, run 'git branch -D testing'.
-```
-
-如果你确实想要删除该分支并丢弃其上的所有工作，可以按照上述输出的提示信息使用 -D 选项强制删除。
-
-# 3.4 与分支有关的工作流
-
-既然你已经学会了基本的分支和合并操作，应该用它们来做点什么呢？在本节中，我们会讲解一些常见的工作流。这些工作流之所以能够存在，要得益于 Git 的轻量级分支机制。你可以根据自己项目的实际情况自由选用它们。
 
 ## 3.4.1 长期分支
 
@@ -497,3 +364,43 @@ If you are sure you want to delete it, run 'git branch -D testing'.
 你在 3.2 节中创建 iss53 和 hotfix 分支时已经见识到上述主题分支了。当时你在这两个分支上进行过几次提交，然后把它们合并到主干分支，最后把它们删除。这种技术使你能够快速进行完整的上下文切换，同时，由于你的工作分散在不同的筒仓中，并且每个分支上的更改保留在主题分支中几分钟、几天甚至几个月，等它们准备就绪时再合并到主干，你也不需要去管这些分支的创建或是开发的先后顺序。
 现在请看一个例子：你先是在 master 分支上进行了工作，之后为了实现某个需求，创建并切换到主题分支 iss91，并在其上做了一些开发。在此之后，你又为了尝试另一种实现上面需求的方式，创建并切换到了新的分支 iss91v2。接着你又切换回 master 分支并继续工作了一阵子，最后你创建了新的分支 dumbidea 来实现你的一个不确定好不好的想法。你的整个提交历史看起来就类似图 3-20。
 ![多个主题分支](https://front-end-1257950569.cos.ap-guangzhou.myqcloud.com/%E7%B2%BE%E9%80%9AGit%EF%BC%88%E7%AC%AC2%E7%89%88%EF%BC%89/%E7%AC%AC3%E7%AB%A0%EF%BC%9AGit%20%E5%88%86%E6%94%AF%E6%9C%BA%E5%88%B6/%E5%A4%9A%E4%B8%AA%E4%B8%BB%E9%A2%98%E5%88%86%E6%94%AF.png)
+现在假设你喜欢实现需求的第二种方案（iss91v2），并决定使用该方案。同时，你向同事展示了你在 dumbidea 分支上所做的工作，他们认为这是天才之作。这时你可以舍弃一开始的 iss91 分支（C5 和 C6 提交也会一同丢失），并把另两个主题分支并入主干。这时的提交历史如下图所示。
+![合并dumbidea和iss91v2之后的提交历史](https://front-end-1257950569.cos.ap-guangzhou.myqcloud.com/%E7%B2%BE%E9%80%9AGit%EF%BC%88%E7%AC%AC2%E7%89%88%EF%BC%89/%E7%AC%AC3%E7%AB%A0%EF%BC%9AGit%20%E5%88%86%E6%94%AF%E6%9C%BA%E5%88%B6/%E5%90%88%E5%B9%B6dumbidea%E5%92%8Ciss91v2%E4%B9%8B%E5%90%8E%E7%9A%84%E6%8F%90%E4%BA%A4%E5%8E%86%E5%8F%B2.png)
+我们在第 5 章会详细讲述各种各样可行的 Git 项目工作流。所以在你决定下个项目使用何种分支体系前，请一定先阅读第 5 章。
+要注意，上述所有操作中涉及的分支全部都是本地分支。你进行的分支和合并操作也全都是只在本地 Git 仓库上进行的，没有涉及任何与服务器端的通信。
+# 3.5 远程分支
+
+远程分支是指向远程仓库的分支的指针，这些指针存在于本地且无法被移动。当你与服务器进行任何网络通信时，它们会自动更新。远程分支有点像书签，它们会提示你上一次连接服务器时远程仓库中每个分支的位置。
+远程分支的表示形式是(remote)/(branch)。例如，如果你想查看上次与服务器通信时远程 origin 仓库中的 master 分支的内容，就需要查看 origin/master 分支。假设你与合作伙伴协同开发某个需求，而他们将数据推送到了 iss53 分支。这时你也可能有一个自己本地的 iss53 分支，但是服务器端的分支其实指向的是 origin/iss53。
+上述内容可能有点令人困惑，所以让我们再来看一个例子。假设你有一台网络上的 Git 服务器，地址是 git.ourcompany.com。如果你将内容从这台服务器上克隆到本地，Git 的 clone 命令会自动把这台服务器命名为 origin，并拉取它的全部数据，然后会在本地创建指向服务器上 master 分支的指针，并命名为 origin/master。Git 接着也会帮你创建你自己的本地 master 分支。这个分支一开始会与 origin 上的 master 分支指向一样的位置，这样你就可以在它上面开始工作了。
+>origin 并非特殊名称
+>与 master 分支名称一样，origin 在 Git 中也没有什么特殊的含义。master 被广泛使用只是因为它是执行 git init 时创建的初始分支的默认名称。origin 也一样是执行 git clone 时远程仓库的默认名称。如果你执行的不是上述命令，而是 git clone -o booyah，那么你的默认远程分支就会是 booyah/master。
+
+![远程仓库和克隆下来的本地仓库](https://front-end-1257950569.cos.ap-guangzhou.myqcloud.com/%E7%B2%BE%E9%80%9AGit%EF%BC%88%E7%AC%AC2%E7%89%88%EF%BC%89/%E7%AC%AC3%E7%AB%A0%EF%BC%9AGit%20%E5%88%86%E6%94%AF%E6%9C%BA%E5%88%B6/%E8%BF%9C%E7%A8%8B%E4%BB%93%E5%BA%93%E5%92%8C%E5%85%8B%E9%9A%86%E4%B8%8B%E6%9D%A5%E7%9A%84%E6%9C%AC%E5%9C%B0%E4%BB%93%E5%BA%93.png)
+假设你在本地的 master 分支上进行了一些工作，与此同时，别人向 git.ourcompany.com 推送了数据，更新了服务器上的 master 分支，这时你的提交历史就与服务器上的历史产生了偏离。而且，只要你不与服务器通信，你的 origin/master 指针就不会移动。
+![本地与远程的数据之间可以产生偏离](https://front-end-1257950569.cos.ap-guangzhou.myqcloud.com/%E7%B2%BE%E9%80%9AGit%EF%BC%88%E7%AC%AC2%E7%89%88%EF%BC%89/%E7%AC%AC3%E7%AB%A0%EF%BC%9AGit%20%E5%88%86%E6%94%AF%E6%9C%BA%E5%88%B6/%E6%9C%AC%E5%9C%B0%E4%B8%8E%E8%BF%9C%E7%A8%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E4%B9%8B%E9%97%B4%E5%8F%AF%E4%BB%A5%E4%BA%A7%E7%94%9F%E5%81%8F%E7%A6%BB.png)
+要与服务器同步，需要执行 git fetch origin 命令。这条命令会查询 "origin" 对应的服务器地址（本例中是 git.ourcompany.com），并从服务器取得所有本地尚未包含的数据，然后更新本地数据库，最后把 origin/master 指针移动到最新的位置上去。
+![git fetch 命令会更新远程分支指针](https://front-end-1257950569.cos.ap-guangzhou.myqcloud.com/%E7%B2%BE%E9%80%9AGit%EF%BC%88%E7%AC%AC2%E7%89%88%EF%BC%89/%E7%AC%AC3%E7%AB%A0%EF%BC%9AGit%20%E5%88%86%E6%94%AF%E6%9C%BA%E5%88%B6/git%20fetch%20%E5%91%BD%E4%BB%A4%E4%BC%9A%E6%9B%B4%E6%96%B0%E8%BF%9C%E7%A8%8B%E5%88%86%E6%94%AF%E6%8C%87%E9%92%88.png)
+为了演示使用多个远程服务器的项目，以及远程分支在这样的项目上是什么样子，让我们假设你还有另一个仅供敏捷开发小组使用的内部 Git 服务器。这台服务器的地址是 git.team1.ourcompany.com。如第 2 章所述，可以用 git remote add 命令把它作为新的远程服务器添加到正在开发的项目上。然后把它命名为 teamone，作为该服务器 URL 的简短名称。
+![把另一台服务器添加为远程仓库](https://front-end-1257950569.cos.ap-guangzhou.myqcloud.com/%E7%B2%BE%E9%80%9AGit%EF%BC%88%E7%AC%AC2%E7%89%88%EF%BC%89/%E7%AC%AC3%E7%AB%A0%EF%BC%9AGit%20%E5%88%86%E6%94%AF%E6%9C%BA%E5%88%B6/%E6%8A%8A%E5%8F%A6%E4%B8%80%E5%8F%B0%E6%9C%8D%E5%8A%A1%E5%99%A8%E6%B7%BB%E5%8A%A0%E4%B8%BA%E8%BF%9C%E7%A8%8B%E4%BB%93%E5%BA%93.png)
+现在可以执行 git fetch teamone 获取到远程的 teamone 服务器上的所有本地不存在的数据。由于到目前为止，上述 teamone 服务器上的数据在 origin 服务器上全部都有，Git 并不会真正拉取到数据，只会创建名为 teamone/master 的远程分支，指向 teamone 服务器上的 master 分支的最新提交。
+![跟踪远程分支teamone/master](https://front-end-1257950569.cos.ap-guangzhou.myqcloud.com/%E7%B2%BE%E9%80%9AGit%EF%BC%88%E7%AC%AC2%E7%89%88%EF%BC%89/%E7%AC%AC3%E7%AB%A0%EF%BC%9AGit%20%E5%88%86%E6%94%AF%E6%9C%BA%E5%88%B6/%E8%B7%9F%E8%B8%AA%E8%BF%9C%E7%A8%8B%E5%88%86%E6%94%AFteamonemaster.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
