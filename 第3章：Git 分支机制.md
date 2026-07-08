@@ -385,6 +385,131 @@ If you are sure you want to delete it, run 'git branch -D testing'.
 ![把另一台服务器添加为远程仓库](https://front-end-1257950569.cos.ap-guangzhou.myqcloud.com/%E7%B2%BE%E9%80%9AGit%EF%BC%88%E7%AC%AC2%E7%89%88%EF%BC%89/%E7%AC%AC3%E7%AB%A0%EF%BC%9AGit%20%E5%88%86%E6%94%AF%E6%9C%BA%E5%88%B6/%E6%8A%8A%E5%8F%A6%E4%B8%80%E5%8F%B0%E6%9C%8D%E5%8A%A1%E5%99%A8%E6%B7%BB%E5%8A%A0%E4%B8%BA%E8%BF%9C%E7%A8%8B%E4%BB%93%E5%BA%93.png)
 现在可以执行 git fetch teamone 获取到远程的 teamone 服务器上的所有本地不存在的数据。由于到目前为止，上述 teamone 服务器上的数据在 origin 服务器上全部都有，Git 并不会真正拉取到数据，只会创建名为 teamone/master 的远程分支，指向 teamone 服务器上的 master 分支的最新提交。
 ![跟踪远程分支teamone/master](https://front-end-1257950569.cos.ap-guangzhou.myqcloud.com/%E7%B2%BE%E9%80%9AGit%EF%BC%88%E7%AC%AC2%E7%89%88%EF%BC%89/%E7%AC%AC3%E7%AB%A0%EF%BC%9AGit%20%E5%88%86%E6%94%AF%E6%9C%BA%E5%88%B6/%E8%B7%9F%E8%B8%AA%E8%BF%9C%E7%A8%8B%E5%88%86%E6%94%AFteamonemaster.png)
+## 3.5.1 推送
+
+当需要同别人共享某个分支上的工作成果时，就要把它推送到一个具有写权限的远程仓库。你的本地分支并不会自动同步到远程仓库，必须要显式地推送那些你想要与别人共享的分支。这样一来，你可以使用私有分支做一些不想与别人共享的工作，而仅仅推送那些需要与别人协作的主题分支。
+假设你有一个叫作 serverfix 的分支需要与其他人协作开发，你可以按照之前推送第一个分支的方法推送它。只需执行 git push (remote) (branch) 命令即可：
+```shell
+git push origin serverfix
+Counting objects: 24, done.
+Delta compression using up to 8 threads.
+Compressing objects: 100%（15/15），done.
+Writing objects: 100%（24/24），1.91KiB | 0 bytes/s, done.
+Total 24（delta 2），reused 0（delta 0）
+To https://github.com/schacon/simplegit
+ * [new branch]  serverfix -> serverfix
+```
+上述命令实际上是一个简化的写法。Git 会自动把分支名称 serverfix 扩展成 refs/heads/serverfix:refs/heads/serverfix。上述操作的含义是："把本地的 serverfix 分支推送到远程的 serverfix 分支上，以更新远程数据"。第 10 章会详细讲解 refs/heads/这部分的含义，并且一般情况下你都可以省略不写这部分。也就是说，你可以执行 git push origin serverfix:serverfix，这条命令可以达到与之前的命令一样的效果。类似这样的命令格式可以用来将本地分支推送到不同名称的远程分支。比如，如果你不想把远程分支命名为 serverfix，就可以执行 git push origin serverfix:awesomebranch，把你的本地 serverfix 分支推送到远程的 awesomebranch 分支上去。
+>不用每次都键入密码
+>如果你使用 HTTPS 的远程服务器地址进行数据推送，那么 Git 服务器会要求你提供用户名和密码以进行身份验证。默认情况下，需要在终端上键入上述身份信息，服务器会据此信息判断你是否有权限推送数据。
+>如果不想每次推送时都键入密码，可以设置一个 "凭据缓存"（credential cache）。最简单的设置方法是把凭据信息暂时保存在内存中几分钟，这只需要执行 git config --global credential.helper cache 命令即可。
+>有关可用的各种凭据缓存选项的更多信息，请参阅 7.14 节。
+
+下一次与你协作的同事从服务器上拉取数据时，他就会获取到一个指向服务器上 serverfix 分支的指针，这个指针就叫作 origin/serverfix：
+```shell
+git fetch origin
+remote: Counting objects: 7, done.
+remote: Compressing objects: 100%（2/2）, done.
+remote: Total 3（delta 0），reused 3（delta 0）
+Unpacking objects: 100%（3/3），done.
+From https://github.com/schacon/simplegit
+ * [new branch]  serverfix -> origin/serverfix
+```
+要注意的一点是，当获取服务器上的数据时，如果获取到了本地还没有的新的远程跟踪分支，这时 Git 并不会自动提供给你该分支的本地可编辑副本。换句话说，在上述例子中，在本地就不会自动创建新的 serverfix 分支，而只是拥有了指向 origin/serverfix 的指针，不能直接作出修改。
+要把该分支上的工作合并到你的当前工作分支，可以执行 git merge origin/serverfix。如果你想要创建自己的本地 serverfix 分支，以便在其上工作，可以执行以下命令。
+```shell
+git checkout -b serverfix origin/serverfix
+Branch serverfix set up to track remote branch serverfix from origin.
+Switched to a new branch 'serverfix'
+```
+这样做会基于 origin/serverfix 创建本地分支，使你可以在其上工作。
+## 3.5.2 跟踪分支
+
+基于远程分支创建的本地分支会自动成为跟踪分支（tracking branch），或者有时候也叫作上游分支（upstream branch）。
+跟踪分支是与远程分支直接关联的本地分支。如果你正处在一个跟踪分支上并键入 git push，Git 会知道要将数据推送到哪个远程服务器上的哪个分支。同样地，执行 git pull 时 Git 也能够知道从哪个服务器上拉取数据，并与本地分支进行合并。
+当你克隆一个远程仓库时，Git 默认情况下会自动创建跟踪着远程 origin/master 分支的本地 master 分支。除此之外，你也可以选择自己设置其他的跟踪分支，比如跟踪其他远程服务器上的分支，或是设置成不跟踪 master 分支。之前看到的例子是一种最简单的情况，即执行 git checkout -b [branch] [remotename]/[branch]。这种操作很常见，所以 Git 提供了 --track 的简略表达方式：
+```shell
+git checkout --track origin/serverfix
+Branch serverfix set up to track remote branch serverfix from origin.
+Switched to a new branch 'serverfix'
+```
+实际上，该操作是如此常见，以至于 Git 做了进一步的简化。当你试图执行分支切换操作时，如果该分支尚未被创建，并且该分支名称和某个远程分支名称一致，那么 Git 会帮你创建跟踪分支。
+```shell
+git checkout serverfix
+Branch serverfix set up to track remote branch serverfix from origin.
+Switched to a new branch 'serverfix'
+```
+要想让创建的本地分支的名称与对应的远程分支名称不一样，可以用我们一开始提供的命令形式，来指定不同的本地分支名称：
+```shell
+git checkout -b sf origin/serverfix
+Branch sf set up to track remote branch serverfix from origin.
+Switched to a new branch 'sf'
+```
+执行完上述命令后，你的本地分支 sf 就会从 origin/serverfix 上获取数据。
+如果想给本地已存在的分支设置跟踪分支，或者要更改本地分支对应的远程分支，可以使用 git branch 命令的 -u 或是 --set-upstream-to 选项设置任意远程分支。
+```shell
+git branch -u origin/serverfix
+Branch serverfix set up to track remote branch serverfix from origin.
+```
+>上游分支的简单写法
+>如果你已经设置好上游分支，就可以通过 @{upstream} 或 @{u} 的简略写法来使用它。例如，假设你在 master 分支上，并且该分支跟踪着 origin/master，你就可以使用 git merge @{u} 来代替 git merge origin/master。
+
+可以使用 git branch 的 -vv 选项来查看已经设置了哪些跟踪分支。该命令将会输出所有本地分支的列表，还会列出每个分支跟踪的远程分支信息，以及本地分支是否领先于或落后于远程分支的信息。
+```shell
+git branch -vv
+  iss53      7e424c3  [origin/iss53: ahead 2] forgot the brackets
+  master     1ae2a45  [origin/master] deploying index fix
+* serverfix  f8674d9  [teamone/server-fix-good: ahead 3, behind 1] this should do it
+  testing    5ea563a  trying something new
+```
+从上述输出信息中可以看出，iss53 分支跟踪着远程的 origin/iss53 分支，并且领先两次提交。领先两次提交的意思是本地分支上有两次提交还没有被推送到服务器端。我们还可以看出，本地的 master 分支跟踪着 origin/master 并且处于与远程分支同步的状态。接下来我们看见的是 serverfix 分支，它跟踪着 teamone 服务器上的 server-fix-good 分支，并且领先三次提交，同时也落后一次提交。上面的意思是服务器上有一次提交的更改还没有合并到本地，并且有三次本地的提交还没有推送到服务器。最后看到的是 testing 分支，它并没有跟踪远程的任何分支。
+要注意的是，上述这些信息是从上次你从各个远程服务器读取数据后开始计算的。也就是说，上面执行的这条命令并不会与服务器通信以获取最新信息，而只是提供给你本地缓存中的信息。如果你需要最新的领先和落后多少次提交的信息，就需要在执行命令前，先从所有远程服务器中读取数据。这可以通过执行$ git fetch --all。git branch -vv 命令来完成。
+## 3.5.3 拉取
+
+git fetch 命令会拉取本地没有的远程所有最新更改数据，但这条命令完全不会更改你的工作目录。它只会从服务器上读取数据，然后让你自己进行合并。除此之外，还有一个 git pull 命令，这条命令在大多数情况下基本等同于执行 git fetch 之后紧跟着执行了git merge。如果你拥有 3.5.2 节中演示过的跟踪分支（可以手动设置，或是通过 clone 或 checkout 命令而得到），执行 git pull 时 Git 就会读取上游服务器和分支上的数据，并尝试着将远分支上的修改合并到本地。
+一般来说，显式地直接使用 fetch 和 merge 命令比使用 git pull 要更好，因为 git pull 的机制会常常使人迷惑。
+## 3.5.4 删除远程分支
+
+当你和你的同事已经完成一个功能，并且把工作合并到了远程的 master 分支（或其他稳定版本代码分支）之后，你已经不再需要包含这个功能的远程分支了。可以通过 git push 的 --d程elete 选项来删除远程分支。例如，如果需要删除远程服务器上的 serverfix 分支，需要执行以下命令。
+```shell
+git push origin --delete serverfix
+To https://github.com/schacon/simplegit
+ - [deleted] serverfix
+```
+基本上可以说，以上命令只是删除了远程服务器上的分支指针。Git 会保留数据一段时间，直到下一次触发垃圾回收。所以，即使误删了分支，一般来说也很容易进行恢复。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
