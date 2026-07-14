@@ -197,8 +197,126 @@ To jessica@githost:simplegit.git
 ![Jessica将所有的变更推送回服务器之后的历史记录](https://front-end-1257950569.cos.ap-guangzhou.myqcloud.com/%E7%B2%BE%E9%80%9AGit%EF%BC%88%E7%AC%AC2%E7%89%88%EF%BC%89/%E7%AC%AC5%E7%AB%A0%EF%BC%9A%E5%88%86%E5%B8%83%E5%BC%8F%20Git/Jessica%E5%B0%86%E6%89%80%E6%9C%89%E7%9A%84%E5%8F%98%E6%9B%B4%E6%8E%A8%E9%80%81%E5%9B%9E%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B9%8B%E5%90%8E%E7%9A%84%E5%8E%86%E5%8F%B2%E8%AE%B0%E5%BD%95.png)
 这是最简单的一种工作流。你工作一段时间后（通常是在主题分支上），在能够整合的时候合并到 master 分支。如果想共享工作结果，可以将其合并到你自己的 master 分支，要是有改动，获取并合并到 origin/master，最后再推送到服务器上的 master 分支。这个过程通常如下所示。
 ![一个简单的多开发人员Git工作流的事件顺序](https://front-end-1257950569.cos.ap-guangzhou.myqcloud.com/%E7%B2%BE%E9%80%9AGit%EF%BC%88%E7%AC%AC2%E7%89%88%EF%BC%89/%E7%AC%AC5%E7%AB%A0%EF%BC%9A%E5%88%86%E5%B8%83%E5%BC%8F%20Git/%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84%E5%A4%9A%E5%BC%80%E5%8F%91%E4%BA%BA%E5%91%98Git%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%9A%84%E4%BA%8B%E4%BB%B6%E9%A1%BA%E5%BA%8F.png)
+## 5.2.3 私有管理团队
 
+在接下来的场景中，你会看到在大型的私有团队中贡献者所扮演的角色。你将学到如何在特定的环境下工作：小组基于特性展开协作，然后由其他人来整合这些由团队所完成的贡献成果。
+假设 John 和 Jessica 共同开发某个软件，同时 Jessica 和 Josie 共同开发另一个特性。在这种情况下，公司采用了一种集成管理者工作流，其中小组的工作只能由特定的工程师进行集成，主仓库的 master 分支也只能够由这些人来更新。在这种情况下，所有的工作流都是在基于团队的分支上完成的，随后由集成人员拉取到一起。
+让我们来看看 Jessica 的工作流，她负责处理两个特性，同时与两名开发人员协作。假设她已经克隆了仓库，决定先处理 featureA。她为该特性创建了一个新的分支并做了一些工作，如下所示。
+```shell
+# Jessica's Machine
+git checkout -b featureA
+Switched to a new branch 'featureA'
+vim lib/simplegit.rb
+git commit -am 'add limit to log function'
+[featureA 3300904] add limit to log function
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+```
+这时，她需要与 John 共享工作内容，于是她将自己在 featureA 分支上的提交推送到了服务器。Jessica 并没有 master 分支的推送权限，只有集成人员才有，为了能与 John 协作，她只能推送到另一个分支，如下所示。
+```shell
+git push -u origin featureA
+...
+To jessica@githost:simplegit.git
+ * [new branch] featureA -> featureA
+```
+Jessica 向 John 发送了电子邮件，告知自己已经向 featureA 分支推送了一些工作内容，他现在就可以查看了。在等待 John 回应的同时，Jessica 与 Josie 在 featureB 上也展示了工作。她一开始先基于服务器的 master 分支创建了一个新的特性分支，如下所示。
+```shell
+# Jessica's Machine
+git fetch origin
+git checkout -b featureB origin/master
+Switched to a new branch 'featureB'
+```
+现在，Jessica 在 featureB 分支上完成了几次提交，如下所示。
+```shell
+vim lib/simplegit.rb
+git commit -am 'made the ls-tree function recursive'
+[featureB e5b0fdc] made the ls-tree function recursive
+	1 files changed, 1 insertions(+), 1 deletions(-)
+vim lib/simplegit.rb
+git commit -am 'add ls-files'
+[featureB 8512791] add ls-files
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+```
+![Jessica的初始提交历史](https://front-end-1257950569.cos.ap-guangzhou.myqcloud.com/%E7%B2%BE%E9%80%9AGit%EF%BC%88%E7%AC%AC2%E7%89%88%EF%BC%89/%E7%AC%AC5%E7%AB%A0%EF%BC%9A%E5%88%86%E5%B8%83%E5%BC%8F%20Git/Jessica%E7%9A%84%E5%88%9D%E5%A7%8B%E6%8F%90%E4%BA%A4%E5%8E%86%E5%8F%B2.png)
+在准备推送工作内容的时候，她收到了 Josie 的电子邮件，邮件中说包含了一些先期工作的分支已经作为 featureBee 被推送到了服务器上。Jessica 在推送之前必须首先将这些变更与自己的进行合并。她可以利用 git fetch 获取到 Josie 的变更，如下所示。
+```shell
+git fetch origin
+...
+From jessica@githost:simplegit
+ * [new branch]  featureBee -> origin/featureBee
+```
+Jessica 现在就可以使用 git merge 将其合并到自己的工作中了，如下所示。
+```shell
+git merge origin/featureBee
+Auto-merging lib/simplegit.rb
+Merge made by recursive.
+ lib/simplegit.rb |  4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+```
+这有一点小问题：她需要将 featureB 分支中合并过的工作内容推送到服务器中的 featureBee 分支。这可以通过在 git push 命令后跟上一个冒号（:），然后再跟上远程分支来指定，如下所示。
+```shell
+git push -u origin featureB:featureBee
+...
+To jessica@githost:simplegit.git
+ fba9af8..cd685d1 featureB -> featureBee
+```
+这叫做引用规格（refspec）。10.5 节会对此及其功能展开更详细的讨论。另外也要注意 -u 选项，它是 --set-upstream 的缩写，该选项能够配置分支以简化随后的推送与拉取。
+接下来，John 发邮件给 Jessica，告知他已经向 featureA 推送了一些变更，要求 Jessica 进行验证。Jessica 执行 git fetch 来拉取这些变更，如下所示。
+```shell
+git fetch origin
+...
+From jessica@githost:simplegit
+ 3300904..aad881d featureA -> origin/featureA
+```
+然后使用 git log 查看变更的具体内容，如下所示。
+```shell
+git log featureA..origin/featureA
+commit aad881d154acdaeb2b6b18ea0e827ed8a6d671e6
+Author: John Smith <jsmith@example.com>
+Date: Fri May 29 19:57:33 2009 -0700
 
+	changed log output to 30 from 25
+```
+最后，她将 John 的工作合并入自己的 featureA 分支，如下所示。
+```shell
+git checkout featureA
+Switched to branch 'featureA'
+git merge origin/featureA
+Updating 3300904..aad881d
+Fast forward
+ lib/simplegit.rb | 10 +++++++++-
+1 files changed, 9 insertions(+), 1 deletions(-)
+```
+Jessica 想要做一些微调，于是重新提交，然后再推送回服务器，如下所示。
+```shell
+git commit -am 'small tweak'
+[featureA 774b3ed] small tweak
+1 files changed, 1 insertions(+), 1 deletions(-)
+git push
+...
+To jessica@githost:simplegit.git
+ 3300904..774b3ed featureA -> featureA
+```
+现在，Jessica 的提交历史如下图所示。
+![Jessica在特性分支上完成提交之后的历史记录](https://front-end-1257950569.cos.ap-guangzhou.myqcloud.com/%E7%B2%BE%E9%80%9AGit%EF%BC%88%E7%AC%AC2%E7%89%88%EF%BC%89/%E7%AC%AC5%E7%AB%A0%EF%BC%9A%E5%88%86%E5%B8%83%E5%BC%8F%20Git/Jessica%E5%9C%A8%E7%89%B9%E6%80%A7%E5%88%86%E6%94%AF%E4%B8%8A%E5%AE%8C%E6%88%90%E6%8F%90%E4%BA%A4%E4%B9%8B%E5%90%8E%E7%9A%84%E5%8E%86%E5%8F%B2%E8%AE%B0%E5%BD%95.png)
+Jessica、Josie 和 John 提醒集成人员，服务器上的 featureA 和 featureBee 已经可以合并入主线了。在并入主线之后，一次获取操作将会得到要给新的合并提交，使得历史记录如下图所示。
+![Jessica在合并完两个主题分支之后的历史记录](https://front-end-1257950569.cos.ap-guangzhou.myqcloud.com/%E7%B2%BE%E9%80%9AGit%EF%BC%88%E7%AC%AC2%E7%89%88%EF%BC%89/%E7%AC%AC5%E7%AB%A0%EF%BC%9A%E5%88%86%E5%B8%83%E5%BC%8F%20Git/Jessica%E5%9C%A8%E5%90%88%E5%B9%B6%E5%AE%8C%E4%B8%A4%E4%B8%AA%E4%B8%BB%E9%A2%98%E5%88%86%E6%94%AF%E4%B9%8B%E5%90%8E%E7%9A%84%E5%8E%86%E5%8F%B2%E8%AE%B0%E5%BD%95.png)
+正是这种能够让多个团队并行工作，随后再分别合并的能力使得很多开发小组转向了 Git。Git 的一个巨大的优势在于，项目中一些小的子团体可以通过远程分支展开协作，而不会对整个团队造成影响或妨碍。你在这里所看到的工作流顺序如下图所示。
+![管理团队工作流的基本顺序](https://front-end-1257950569.cos.ap-guangzhou.myqcloud.com/%E7%B2%BE%E9%80%9AGit%EF%BC%88%E7%AC%AC2%E7%89%88%EF%BC%89/%E7%AC%AC5%E7%AB%A0%EF%BC%9A%E5%88%86%E5%B8%83%E5%BC%8F%20Git/%E7%AE%A1%E7%90%86%E5%9B%A2%E9%98%9F%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%9A%84%E5%9F%BA%E6%9C%AC%E9%A1%BA%E5%BA%8F.png)
+## 5.2.4 派生的公开项目
+
+为公开项目做贡献有点不同。因为你并没有直接更新项目分支的权限，所以只能通过其他方式将工作结果交给项目维护人员。第一个例子描述了在对派生提供了良好支持的 Git 主机上利用派生进行贡献。很多托管站点支持这种功能（包括 Github、BitBucket、Google Code、repo.or.cz 等），很多项目维护人员也喜欢这种贡献方式。5.2.5 节将会讨论那些偏好通过电子邮件接受补丁的项目。
+首先，你得有一个主仓库的克隆，为你打开贡献的补丁创建一个主题分支在该分支上展开工作。这一系列操作如下所示。
+```shell
+git clone (url)
+cd project
+git checkout -b featureA
+# (work)
+git commit
+# (work)
+git commit
+```
+>注意
+>你可能想使用 rebase -i 将工作内容压缩成单个提交，或是重新分配多个提交中的工作内容，以便维护人员更容易评审补丁。7.6 节会对交互式变基做更详尽的介绍。
 
 
 
