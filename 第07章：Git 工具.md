@@ -31,5 +31,11 @@ Date: Thu Dec 11 14:58:32 2008 -0800
 	
 	added some blame and merge stuff
 ```
+在这个例子中，选择 1c002dd...。如果你想对这个提交使用 git show 命令，那么下列命令都是等效的（假设短格式没有出现歧义）。
+```shell
+git show 1c002dd4b536e7479fe34593e72e6c6c1819e53b
+git show 1c002dd4b536e7479f
+git show 1c002d
+```
 
 
